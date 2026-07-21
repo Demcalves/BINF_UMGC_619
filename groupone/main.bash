@@ -10,7 +10,6 @@ RAW_DATA="${PROJ_DIR}/rawdata/raw"
 SRA_LIST="${PROJ_DIR}/sra.txt"
 # get raw data using xargs
 touch ${PROJ_DIR}/sraToAdd.txt
-touch ${PROJ_DIR}/srr.txt
 
 DWND_LIST="${PROJ_DIR}/sraToAdd.txt" # Download list, temporary file
 
