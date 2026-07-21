@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 set -euo pipefail
 
 # run the conda_env_setup
@@ -10,6 +11,7 @@ RAW_DATA="${PROJ_DIR}/rawdata/raw"
 SRA_LIST="${PROJ_DIR}/sra.txt"
 # get raw data using xargs
 touch ${PROJ_DIR}/sraToAdd.txt
+touch ${PROJ_DIR}/srr.txt
 
 DWND_LIST="${PROJ_DIR}/sraToAdd.txt" # Download list, temporary file
 
@@ -28,7 +30,7 @@ done < $SRA_LIST
 # enable excution privelges
 if [ $(grep -v "\s+$" $DWND_LIST) > 0 ]; then
 
-    RAW_DATA_SCRIPT="${PROJ_DIR}/scripts/get_rawdata.bash"
+    RAW_DATA_SCRIPT="${PROJ_DIR}/scripts/00_get_rawdata.bash"
     chmod -x "${RAW_DATA_SCRIPT}"
     # this runs the get raw data script
     xargs -a "${DWND_LIST}" -P 4 -I{} bash "$RAW_DATA_SCRIPT" {}
@@ -36,14 +38,30 @@ fi
 # clean up step
 rm $DWND_LIST 
 
+
+touch ${PROJ_DIR}/fastqc_list.txt
+FASTQC_LIST="${PROJ_DIR}/fastqc_list.txt"
+
 # Run FastQC on Gathered files in rawdata/raw
 # Run FastQC on both files
 while read LINE; do
+    echo $LINE
     if [ ! -f "$PROJ_DIR/results/qc/${LINE}_1_fastqc.html" ]; then
-        echo "Performing fastqc..."
-        fastqc "$RAW_DATA/${LINE}_1.fastq" "$RAW_DATA/${LINE}_2.fastq" \
-            -o "$PROJ_DIR/results/qc" -t 2
-        echo "FastQC complete! Reports:"
-        ls "$PROJ_DIR/results/qc"/*.html
+        
+        echo "FASTQC for ${LINE} is not complete! Adding to ${FASTQC_LIST} for FASTQC"
+        cat $LINE >> $FASTQC_LIST
+        
     fi
 done < $SRA_LIST
+
+if [ $(grep -v "\s+$" $FASTQC_LIST) > 0 ]; then
+    echo "Performing fastqc..."
+    FASTQC_SCRIPT="${PROJ_DIR}/scripts/01_run_fastqc.bash"
+    chmod -x "${FASTQC_SCRIPT}"
+    # this runs the get raw data script
+    xargs -a "${FASTQC_LIST}" -P 4 -I{} bash "$FASTQC_SCRIPT" {}
+fi
+
+echo "FastQC complete for all test articles! Reports:"
+ls "$PROJ_DIR/results/qc"/*.html
+
