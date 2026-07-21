@@ -38,7 +38,7 @@ fi
 # clean up step
 rm $DWND_LIST 
 
-
+# Get list of SRR files that need to be ran through FASTQC
 touch ${PROJ_DIR}/fastqc_list.txt
 FASTQC_LIST="${PROJ_DIR}/fastqc_list.txt"
 
@@ -65,3 +65,5 @@ fi
 echo "FastQC complete for all test articles! Reports:"
 ls "$PROJ_DIR/results/qc"/*.html
 
+# clean up 
+rm $FASTQC_LIST
