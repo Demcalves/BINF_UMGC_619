@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
 
 set -eou pipefail
-BASE_DIR=$(pwd)
-echo "${BASE_DIR}"
+PROJ_DIR=$(pwd)
 
 SRA=$1
 # set directory
 
-PROJ_DIR="${BASE_DIR}/groupone"
 RAW_DATA="${PROJ_DIR}/rawdata/raw"
 SRX_LIST="${PROJ_DIR}/sraToAdd.txt"
 # get length of entries in SRX_LIST
