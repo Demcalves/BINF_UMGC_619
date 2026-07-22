@@ -22,7 +22,7 @@ conda activate groupone
 
 # Install tools
 conda install -c bioconda -c conda-forge -y \
-    sra-tools fastqc fastp sortmerna salmon
+    sra-tools fastqc fastp sortmerna salmon gffread
 
 set -u
 # Verify installations
@@ -30,4 +30,5 @@ fastqc --version
 fastp --version
 sortmerna --version
 salmon --version
+gffread --version
 python3 --version
