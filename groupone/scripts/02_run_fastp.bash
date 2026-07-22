@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-
 set -eou pipefail
+
 PROJ_DIR=$(pwd)
 
 SRA=$1
