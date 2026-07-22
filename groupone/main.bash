@@ -6,7 +6,8 @@ set -euo pipefail
 
 PROJ_DIR=$(pwd) # run within the groupone directory
 #PROJ_DIR="${BASE_DIR}/groupone"
-RAW_DATA="${PROJ_DIR}/data/raw"
+RAWDATA_DIR="${PROJ_DIR}/data/raw"
+REF_DIR="${PROJ_DIR}/data/reference"
 SRA_LIST="${PROJ_DIR}/sra.txt"
 
 # Make directories !!
@@ -26,14 +27,13 @@ touch ${PROJ_DIR}/srr.txt
 DWND_LIST="${PROJ_DIR}/sraToAdd.txt" # Download list, temporary file
 
 while read LINE; do
-    if [ ! -d "${RAW_DATA}/${LINE}" ]; then
+    if [ ! -d "${RAWDATA_DIR}/${LINE}" ]; then
         echo "${LINE} is not downloaded, adding to textfile for download"
         cat $LINE >> $DWND_LIST
     else
-        echo "${LINE} is already downloaded in ${RAW_DATA}"
+        echo "${LINE} is already downloaded in ${RAWDATA_DIR}"
     fi
 done < $SRA_LIST
-
 
 # calculate number of concurrent operations needed
 # add data now with $DWND_LIST using xargs
@@ -47,6 +47,11 @@ if [ $(grep -v "\s+$" $DWND_LIST) > 0 ]; then
 fi
 # clean up step
 rm $DWND_LIST 
+
+# with the reference data collected, use GFF read to create the 
+#transcriptome, which will also reside in the reference subdirectory
+# calling this script to build the transcriptome and index with Salmon
+bash 01_build_index.bash
 
 # For the rest of the workflow, it is naively assumed that if the FASTQC step below 
 # for an expected result has not been performed, that the subsequent steps of trimming, 
@@ -79,9 +84,13 @@ if [ $(grep -v "\s+$" $WORKFLOW_LIST) > 0 ]; then
     # this runs the get raw data script
     xargs -a "${WORKFLOW_LIST}" -P 4 -I{} bash "$FASTQC_SCRIPT" {}
 
-
     echo "FastQC complete for all test articles! Reports:"
     ls "$PROJ_DIR/results/qc"/*.html
+
+fi
+
+# separating trimming and RNA sorting steps
+if [ $(grep -v "\s+$" $WORKFLOW_LIST) > 0 ]; then
 
     # Moving on to read trims, using fastp
     echo "Performing fastp trimming ..."
@@ -89,5 +98,15 @@ if [ $(grep -v "\s+$" $WORKFLOW_LIST) > 0 ]; then
     chmod -x "${FASTP_SCRIPT}"
     # this runs the get raw data script
     xargs -a "${WORKFLOW_LIST}" -P 4 -I{} bash "$FASTP_SCRIPT" {}
+    echo "FastQC complete for all test articles! Reports:"
+    ls "$PROJ_DIR/results/trimmed"/*.html
 
+    # move onto rna filtering with sortmerna
+    echo "sorting rna reads with SortMeRNA"
+    SORTRNA_SCRIPT="${PROJ_DIR}/scripts/02_run_sortmerna.bash"
+    chmod -x "${SORTRNA_SCRIPT}"
+    # this runs the get raw data script
+    xargs -a "${WORKFLOW_LIST}" -P 4 -I{} bash "$SORTRNA_SCRIPT" {}
+    echo "SortMeRNA complete for all test articles! Reports:"
+    ls "$PROJ_DIR/results/sorted"/*.html
 fi
