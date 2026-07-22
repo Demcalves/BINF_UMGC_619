@@ -3,7 +3,5 @@ path=$(pwd)
 echo "${path}"
 
 # set directory
-# Create a project directory
-if [ ! -d "groupone" ]; then
-    mkdir -p groupone/{rawdata/{raw,reference},results/{qc,trimmed,aligned,counts,de,figures}}
-fi
+# Create a project directory from inside group one
+mkdir -p {rawdata/{raw,reference,index},results/{qc,trimmed,sorted,aligned,counts,de,figures}}
