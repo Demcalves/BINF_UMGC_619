@@ -14,11 +14,11 @@ SRA_LIST="${PROJ_DIR}/sra.txt"
 # It is naively assumed that if the user does not have the data directory, 
 # then the other directories are likely to be missing or not valid.
 if [ ! -d "data" ]; then
-    bash ${PROJ_DIR}/scripts/make_dir.bash
+    bash ${PROJ_DIR}/make_dir.bash
 fi
 
 # get the reference genome using the following script, storing in groupone/data/reference
-bash 00_get_reference.bash
+bash "scripts/00_get_reference.bash"
 
 # get raw data using xargs
 touch ${PROJ_DIR}/sraToAdd.txt
@@ -29,7 +29,7 @@ DWND_LIST="${PROJ_DIR}/sraToAdd.txt" # Download list, temporary file
 while read LINE; do
     if [ ! -d "${RAWDATA_DIR}/${LINE}" ]; then
         echo "${LINE} is not downloaded, adding to textfile for download"
-        cat $LINE >> $DWND_LIST
+        echo "${LINE}" >> $DWND_LIST
     else
         echo "${LINE} is already downloaded in ${RAWDATA_DIR}"
     fi
@@ -51,7 +51,7 @@ rm $DWND_LIST
 # with the reference data collected, use GFF read to create the 
 #transcriptome, which will also reside in the reference subdirectory
 # calling this script to build the transcriptome and index with Salmon
-bash 01_build_index.bash
+bash "scripts/01_build_index.bash"
 
 # For the rest of the workflow, it is naively assumed that if the FASTQC step below 
 # for an expected result has not been performed, that the subsequent steps of trimming, 
