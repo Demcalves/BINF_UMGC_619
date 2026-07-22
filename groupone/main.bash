@@ -4,11 +4,21 @@ set -euo pipefail
 # run the conda_env_setup
 #bash conda_env_setup.bash
 
-
-PROJ_DIR=$(pwd)
+PROJ_DIR=$(pwd) # run within the groupone directory
 #PROJ_DIR="${BASE_DIR}/groupone"
 RAW_DATA="${PROJ_DIR}/data/raw"
 SRA_LIST="${PROJ_DIR}/sra.txt"
+
+# Make directories !!
+# It is naively assumed that if the user does not have the data directory, 
+# then the other directories are likely to be missing or not valid.
+if [ ! -d "data" ]; then
+    bash ${PROJ_DIR}/scripts/make_dir.bash
+fi
+
+# get the reference genome using the following script, storing in groupone/data/reference
+bash 00_get_reference.bash
+
 # get raw data using xargs
 touch ${PROJ_DIR}/sraToAdd.txt
 touch ${PROJ_DIR}/srr.txt
@@ -79,4 +89,5 @@ if [ $(grep -v "\s+$" $WORKFLOW_LIST) > 0 ]; then
     chmod -x "${FASTP_SCRIPT}"
     # this runs the get raw data script
     xargs -a "${WORKFLOW_LIST}" -P 4 -I{} bash "$FASTP_SCRIPT" {}
+
 fi
