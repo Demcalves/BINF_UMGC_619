@@ -42,7 +42,7 @@ done < $SRA_LIST
 # calculate number of concurrent operations needed
 # add data now with $DWND_LIST using xargs
 # enable excution privelges
-if [ $(grep -v "\s+$" $DWND_LIST | wc -l) > 0 ]; then
+if [ $(grep -v -E "^\s*$" $DWND_LIST | wc -l) -gt 0 ]; then
 
     echo "downloading raw data"
     RAW_DATA_SCRIPT="${PROJ_DIR}/scripts/00_get_rawdata.bash"
@@ -81,7 +81,7 @@ while read LINE; do
     fi
 done < $SRA_LIST
 
-if [ $(grep -v "\s+$" $WORKFLOW_LIST | wc -l) > 0 ]; then
+if [ $(grep -v -E "^\s*$" $WORKFLOW_LIST | wc -l) -gt 0 ]; then
     
     echo "Performing fastqc..."
     FASTQC_SCRIPT="${PROJ_DIR}/scripts/01_run_fastqc.bash"
@@ -95,7 +95,7 @@ if [ $(grep -v "\s+$" $WORKFLOW_LIST | wc -l) > 0 ]; then
 fi
 
 # separating trimming and RNA sorting steps
-if [ $(grep -v "\s+$" $WORKFLOW_LIST | wc -l) > 0 ]; then
+if [ $(grep -v -E "^\s*$" $WORKFLOW_LIST | wc -l) -gt 0 ]; then
 
     # Moving on to read trims, using fastp
     echo "Performing fastp trimming ..."

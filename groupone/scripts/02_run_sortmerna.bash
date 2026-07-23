@@ -11,10 +11,10 @@ SRA=$1
 
 SORTRNA_LIST="${PROJ_DIR}/workflow_list.txt" # list of sra to run fastqc on, used for allocating resources for running multiple fastqc
 # get length of entries in FASTQC_LIST
-SORTRNA_DEPTH=$(grep -v "\s*$" $SORTRNA_LIST | wc -l)
+SORTRNA_DEPTH=$(grep -c -v -E "^\s*$" $SORTRNA_LIST)
 # calculate number of available threads for concurrent processing
 MAX_THREAD=8
-THREAD_COUNT=$(($MAX_THREAD / $SORTRNA_DEPTH))
+THREAD_COUNT=$(($SORTRNA_DEPTH > 0 ? $MAX_THREAD / $SORTRNA_DEPTH : 1))
 
 # since we have paired reads follow this format
 sortmerna --ref "${TRIM_DIR}/${SRA}_trimmed_R1.fastq" \
