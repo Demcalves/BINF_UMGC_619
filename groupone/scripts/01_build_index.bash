@@ -17,7 +17,7 @@ fi
 echo "B. subtilis transcriptome is present in the reference directory (${REF_DIR})"
 
 # now build the index and store it in data/index
-if [ ! -f "${IDX_DIR}/bsub_transcripts_index" ]; then
+if [ ! -d "${IDX_DIR}/bsub_transcripts_index" ]; then
     # check if all of the necessary files for index building are present for Salmon.
     # For a decoys.txt, first create a new concatenated file of the genome and transcriptome
     # to make a "gentrome", which is really the transcripts with the decoys in there

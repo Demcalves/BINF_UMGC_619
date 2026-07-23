@@ -22,14 +22,18 @@ bash "scripts/00_get_reference.bash"
 
 # get raw data using xargs
 touch ${PROJ_DIR}/sraToAdd.txt
-touch ${PROJ_DIR}/srr.txt
 
 DWND_LIST="${PROJ_DIR}/sraToAdd.txt" # Download list, temporary file
 
 while read LINE; do
     if [ ! -d "${RAWDATA_DIR}/${LINE}" ]; then
         echo "${LINE} is not downloaded, adding to textfile for download"
-        echo "${LINE}" >> $DWND_LIST
+        if [ $(grep -v "\s+$" $DWND_LIST | wc -l) > 0 ]; then
+
+            echo "${LINE}" >> $DWND_LIST
+        else
+            echo "${LINE}" > $DWND_LIST
+        fi
     else
         echo "${LINE} is already downloaded in ${RAWDATA_DIR}"
     fi
@@ -38,8 +42,9 @@ done < $SRA_LIST
 # calculate number of concurrent operations needed
 # add data now with $DWND_LIST using xargs
 # enable excution privelges
-if [ $(grep -v "\s+$" $DWND_LIST) > 0 ]; then
+if [ $(grep -v "\s+$" $DWND_LIST | wc -l) > 0 ]; then
 
+    echo "downloading raw data"
     RAW_DATA_SCRIPT="${PROJ_DIR}/scripts/00_get_rawdata.bash"
     chmod -x "${RAW_DATA_SCRIPT}"
     # this runs the get raw data script
@@ -71,12 +76,12 @@ while read LINE; do
     if [ ! -f "$PROJ_DIR/results/qc/${LINE}_1_fastqc.html" ]; then
         
         echo "FASTQC for ${LINE} is not complete! Adding to ${WORKFLOW_LIST} for FASTQC"
-        cat $LINE >> $WORKFLOW_LIST
+        echo $LINE >> $WORKFLOW_LIST
         
     fi
 done < $SRA_LIST
 
-if [ $(grep -v "\s+$" $WORKFLOW_LIST) > 0 ]; then
+if [ $(grep -v "\s+$" $WORKFLOW_LIST | wc -l) > 0 ]; then
     
     echo "Performing fastqc..."
     FASTQC_SCRIPT="${PROJ_DIR}/scripts/01_run_fastqc.bash"
@@ -90,7 +95,7 @@ if [ $(grep -v "\s+$" $WORKFLOW_LIST) > 0 ]; then
 fi
 
 # separating trimming and RNA sorting steps
-if [ $(grep -v "\s+$" $WORKFLOW_LIST) > 0 ]; then
+if [ $(grep -v "\s+$" $WORKFLOW_LIST | wc -l) > 0 ]; then
 
     # Moving on to read trims, using fastp
     echo "Performing fastp trimming ..."
