@@ -7,10 +7,12 @@ set -euo pipefail
 PROJ_DIR=$(pwd) # run within the groupone directory
 #PROJ_DIR="${BASE_DIR}/groupone"
 RAWDATA_DIR="${PROJ_DIR}/data/raw"
+RNADB_DIR="${PROJ_DIR}/data/rnadb"
 REF_DIR="${PROJ_DIR}/data/reference"
 SRA_LIST="${PROJ_DIR}/sra.txt"
 SRA_DEPTH=$(grep -v -E "^\s*$" $SRA_LIST | wc -l)
 
+############## Step 1: Getting Data and References ##############
 # Make directories !!
 # It is naively assumed that if the user does not have the data directory, 
 # then the other directories are likely to be missing or not valid.
@@ -20,6 +22,17 @@ fi
 
 # get the reference genome using the following script, storing in groupone/data/reference
 bash "scripts/00_get_reference.bash"
+
+# download rna database for sortmerna later following instructions from https://github.com/sortmerna/sortmerna
+if [ ! -f "${RNADB_DIR}/smr_v4.3_default_db.fasta" ]; then
+    echo "downloading rna databases from biocore for sortmerna"
+    # name of the file is default database that database.tar.gz but just want the default_db instead
+    wget -O "${RNADB_DIR/}smr_v4.3_default_db.fasta.gz" https://github.com/sortmerna/sortmerna/releases/download/v7.0.0/smr_v4.3_default_db.fasta.gz 
+    # unzip files into DB directory
+    gunzip ${RNADB_DIR}/smr_v4.3_default_db.fasta.gz 
+fi
+
+echo "RNA databases for SortMeRNA are downloaded and can be found in ${RNADB_DIR}"
 
 # get raw data using xargs
 touch ${PROJ_DIR}/sraToAdd.txt
@@ -184,6 +197,7 @@ else
     chmod -x "${SORTRNA_SCRIPT}"
     # this runs the get raw data script
     xargs -a "${WORKFLOW_LIST}" -P 4 -I{} bash "$SORTRNA_SCRIPT" {}
+    
     echo "SortMeRNA complete for all test articles! Reports:"
     ls "$PROJ_DIR/results/sorted"/*.html
 fi

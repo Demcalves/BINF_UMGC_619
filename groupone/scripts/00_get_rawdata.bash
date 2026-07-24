@@ -18,5 +18,5 @@ prefetch "${SRA}" -O "${RAW_DATA}"
 fasterq-dump "${SRA}" -O "${RAW_DATA}" --split-files --threads "${THREAD_COUNT}" # this download might be slow
 
 # perform cleanup step removing sra directory and tmp files
-rm -rf $PROJ_DIR/data/fasterq.tmp.*
-rm -rf "${RAW_DATA}/${SRA}"
+rm -rf $PROJ_DIR/data/fasterq.tmp.* # tmp files store a lot of data not needed
+rm -rf "${RAW_DATA}/${SRA}" # these sra folders are no longer needed
