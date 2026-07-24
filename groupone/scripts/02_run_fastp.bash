@@ -17,18 +17,18 @@ THREAD_COUNT=$(($FASTP_DEPTH > 0 ? $MAX_THREAD / $FASTP_DEPTH : 1))
 # gather raw_data read
 echo "Performing trimming and filtering of ${SRA}..."
 fastp \
-    -i "$RESULTS/qc/${SRA}_1.fastq" \
-    -I "$RESULTS/qc/${SRA}_2.fastq" \
-    -o "$RESULTS/trimmed/${SRA}_trimmed_R1.fastq" \
-    -O "$RESULTS/trimmed/${SRA}_trimmed_R2.fastq" \
+    -i "${RAW_DATA}/${SRA}_1.fastq" \
+    -I "${RAW_DATA}/${SRA}_2.fastq" \
+    -o "${RESULTS}/trimmed/${SRA}_trimmed_R1.fastq" \
+    -O "${RESULTS}/trimmed/${SRA}_trimmed_R2.fastq" \
     --qualified_quality_phred 20 \
     --length_required 100 \
     --detect_adapter_for_pe \
     --thread $THREAD_COUNT \
-    --html "$RESULTS/trimmed/${SRA}_fastp_report.html" \
-    --json "$RESULTS/trimmed/${SRA}_fastp_report.json"
+    --html "${RESULTS}/trimmed/${SRA}_fastp_report.html" \
+    --json "${RESULTS}/trimmed/${SRA}_fastp_report.json"
 
 echo "fastp exit code: $?"
 # quick comparison to visualize while in the command line
-echo "Before: $(( $(wc -l < "$RAW_DATA/${SRA}_1.fastq") / 4 )) read pairs"
-echo "After: $(( $(wc -l < "$RESULTS/trimmed/${SRA}_trimmed_R1.fastq") / 4 )) read pairs"
+echo "Before: $(( $(wc -l < "${RAW_DATA}/${SRA}_1.fastq") / 4 )) read pairs"
+echo "After: $(( $(wc -l < "${RESULTS}/trimmed/${SRA}_trimmed_R1.fastq") / 4 )) read pairs"

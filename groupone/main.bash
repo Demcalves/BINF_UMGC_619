@@ -9,6 +9,7 @@ PROJ_DIR=$(pwd) # run within the groupone directory
 RAWDATA_DIR="${PROJ_DIR}/data/raw"
 REF_DIR="${PROJ_DIR}/data/reference"
 SRA_LIST="${PROJ_DIR}/sra.txt"
+SRA_DEPTH=$(grep -v -E "^\s*$" $SRA_LIST | wc -l)
 
 # Make directories !!
 # It is naively assumed that if the user does not have the data directory, 
@@ -24,26 +25,30 @@ bash "scripts/00_get_reference.bash"
 touch ${PROJ_DIR}/sraToAdd.txt
 
 DWND_LIST="${PROJ_DIR}/sraToAdd.txt" # Download list, temporary file
-
+DWND_COUNT=0
 while read LINE; do
-    if [ ! -d "${RAWDATA_DIR}/${LINE}" ]; then
-        echo "${LINE} is not downloaded, adding to textfile for download"
-        if [ $(grep -v "\s+$" $DWND_LIST | wc -l) > 0 ]; then
+    if [ ! -f "${RAWDATA_DIR}/${LINE}_1.fastq" ]; then
+        echo "Raw Data files for ${LINE} could not be found, adding to textfile for download"
+        if [ $(grep -v "\s+$" $DWND_LIST | wc -l) -gt 0 ]; then
 
-            echo "${LINE}" >> $DWND_LIST
+            echo "${LINE}" >> $DWND_LIST # append to list
         else
-            echo "${LINE}" > $DWND_LIST
+            echo "${LINE}" > $DWND_LIST # overwrite list
         fi
     else
-        echo "${LINE} is already downloaded in ${RAWDATA_DIR}"
+        echo "Raw Data files for ${LINE} is already downloaded in ${RAWDATA_DIR}"
+        DWND_COUNT=$(($DWND_COUNT + 1))
     fi
 done < $SRA_LIST
 
-# calculate number of concurrent operations needed
-# add data now with $DWND_LIST using xargs
-# enable excution privelges
-if [ $(grep -v -E "^\s*$" $DWND_LIST | wc -l) -gt 0 ]; then
-
+if [ $DWND_COUNT -eq $SRA_DEPTH ]; then
+    echo "all samples have been downloaded already! moving onto the next step"
+    echo "" > $DWND_LIST # reset the file in case crash
+else
+    # DWND_COUNT and DWND_DEPTH do not equal each other, thus there are exist some lines in DWND_DEPTH that have not been processed
+    # calculate number of concurrent operations needed
+    # add data now with $DWND_LIST using xargs
+    # enable excution privelges
     echo "downloading raw data"
     RAW_DATA_SCRIPT="${PROJ_DIR}/scripts/00_get_rawdata.bash"
     chmod -x "${RAW_DATA_SCRIPT}"
@@ -70,19 +75,34 @@ WORKFLOW_LIST="${PROJ_DIR}/workflow_list.txt"
 
 # Run FastQC on Gathered files in rawdata/raw
 # Run FastQC on both files
+WORK_COUNT=0 
 
+# figure out which FASTQC files, if ran once are done
 while read LINE; do
     echo $LINE
     if [ ! -f "$PROJ_DIR/results/qc/${LINE}_1_fastqc.html" ]; then
         
         echo "FASTQC for ${LINE} is not complete! Adding to ${WORKFLOW_LIST} for FASTQC"
-        echo $LINE >> $WORKFLOW_LIST
-        
+        if [ $(grep -v -E "^\s*$" $WORKFLOW_LIST | wc -l) -gt 0 ]; then
+
+            echo "${LINE}" >> $WORKFLOW_LIST # append to list
+        else
+            echo "${LINE}" > $WORKFLOW_LIST # overwrite the previous list if there were errors just in case
+        fi
+    else
+        # increment WORK_COUNT for each line downloaded 
+        echo "FASTQC for ${LINE} is complete! Incrementing count tracker for FASTQC"
+        WORK_COUNT=$(($WORK_COUNT + 1))
     fi
 done < $SRA_LIST
 
-if [ $(grep -v -E "^\s*$" $WORKFLOW_LIST | wc -l) -gt 0 ]; then
-    
+# decide if FASTQC is needed
+if [ $WORK_COUNT -eq $SRA_DEPTH ]; then
+    echo "All fastq files in ${SRA_LIST} have been processed and can be found in ${PROJ_DIR}/results/qc"
+    echo "" > $WORKFLOW_LIST # overwrite the list if the work count equals the workflow list depth (all samples have been downloaded or process)
+    WORK_COUNT=0 # reset workcount variable
+
+else
     echo "Performing fastqc..."
     FASTQC_SCRIPT="${PROJ_DIR}/scripts/01_run_fastqc.bash"
     chmod -x "${FASTQC_SCRIPT}"
@@ -94,9 +114,34 @@ if [ $(grep -v -E "^\s*$" $WORKFLOW_LIST | wc -l) -gt 0 ]; then
 
 fi
 
-# separating trimming and RNA sorting steps
-if [ $(grep -v -E "^\s*$" $WORKFLOW_LIST | wc -l) -gt 0 ]; then
+# Fastp logic, similar logic as above
+while read LINE; do
+    echo $LINE
+    if [ ! -f "$PROJ_DIR/results/trimmed/${LINE}_trimmed_R1.fastq" ]; then
 
+        echo "FASTP for ${LINE} is not complete! Adding to ${WORKFLOW_LIST} for FASTQC"
+        if [ $(grep -v -E "^\s*$" $WORKFLOW_LIST | wc -l) -gt 0 ]; then
+
+            echo "${LINE}" >> $WORKFLOW_LIST # append to list
+        else
+            echo "${LINE}" > $WORKFLOW_LIST # overwrite the previous list if there were errors just in case
+        fi
+    else
+        # increment WORK_COUNT for each line downloaded 
+        echo "FASTP for ${LINE} is complete! Incrementing count tracker for FASTQC"
+        WORK_COUNT=$(($WORK_COUNT + 1))
+    fi
+done < $SRA_LIST
+
+# Control block for running FASTP Script
+
+if [ $WORK_COUNT -eq $SRA_DEPTH ]; then
+    echo "All FASTP files in ${SRA_LIST} have been processed and can be found in ${PROJ_DIR}/results/trimmed"
+    echo "" > $WORKFLOW_LIST # overwrite the list if the work count equals the workflow list depth (all samples have been downloaded or process)
+    WORK_COUNT=0 # reset workcount variable
+
+# execute the script if the work_count does not equal the workflow_depth list
+else 
     # Moving on to read trims, using fastp
     echo "Performing fastp trimming ..."
     FASTP_SCRIPT="${PROJ_DIR}/scripts/02_run_fastp.bash"
@@ -105,7 +150,34 @@ if [ $(grep -v -E "^\s*$" $WORKFLOW_LIST | wc -l) -gt 0 ]; then
     xargs -a "${WORKFLOW_LIST}" -P 4 -I{} bash "$FASTP_SCRIPT" {}
     echo "FastQC complete for all test articles! Reports:"
     ls "$PROJ_DIR/results/trimmed"/*.html
+fi
 
+# sortmerna logic 
+while read LINE; do
+    echo $LINE
+    if [ ! -f "$PROJ_DIR/results/sorted/${LINE}_trimmed_sorted_r1.fastq" ]; then
+
+        echo "SortMeRNA for ${LINE} is not complete! Adding to ${WORKFLOW_LIST} for SortMeRNA"
+        if [ $(grep -v -E "^\s*$" $WORKFLOW_LIST | wc -l) -gt 0 ]; then
+
+            echo "${LINE}" >> $WORKFLOW_LIST # append to list
+        else
+            echo "${LINE}" > $WORKFLOW_LIST # overwrite the previous list if there were errors just in case
+        fi
+    else
+        # increment WORK_COUNT for each line downloaded 
+        echo "SortMeRNA for ${LINE} is complete! Incrementing count tracker for SortMeRNA"
+        WORK_COUNT=$(($WORK_COUNT + 1))
+    fi
+done < $SRA_LIST
+
+if [ $WORK_COUNT -eq $SRA_DEPTH ]; then
+    echo "All SortMeRNA files in ${SRA_LIST} have been processed and can be found in ${PROJ_DIR}/results/sorted"
+    echo "" > $WORKFLOW_LIST # overwrite the list if the work count equals the workflow list depth (all samples have been downloaded or process)
+    WORK_COUNT=0 # reset workcount variable
+
+# execute the script if the work_count does not equal the workflow_depth list
+else 
     # move onto rna filtering with sortmerna
     echo "sorting rna reads with SortMeRNA"
     SORTRNA_SCRIPT="${PROJ_DIR}/scripts/02_run_sortmerna.bash"
@@ -115,3 +187,5 @@ if [ $(grep -v -E "^\s*$" $WORKFLOW_LIST | wc -l) -gt 0 ]; then
     echo "SortMeRNA complete for all test articles! Reports:"
     ls "$PROJ_DIR/results/sorted"/*.html
 fi
+
+rm $WORKFLOW_LIST
