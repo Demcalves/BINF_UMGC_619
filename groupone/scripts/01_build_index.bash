@@ -8,6 +8,7 @@ set -eou pipefail
 PROJ_DIR=$(pwd)
 REF_DIR="${PROJ_DIR}/data/reference"
 IDX_DIR="${PROJ_DIR}/data/index"
+RES_DIR=
 
 # make transcriptome file with gffread, stored in data/ref
 if [ ! -f "${REF_DIR}/bsubtilis_transcriptome.fa" ]; then
@@ -38,3 +39,10 @@ if [ ! -d "${IDX_DIR}/bsub_transcripts_index" ]; then
                 -k 31 # kmer size, this is already 31 as a default but this can be adjusted if necessary
 fi
 echo "B. subtilis index is complete and is stored in ${IDX_DIR}"
+
+# now go to annotations and drop a compressed bsub_genome, containing only the CDS and annotation data that will be extracted
+awk -F'\t' '$3 == "CDS" {print $3"\t"$9}' data/reference/bsubtilis_genome.gff > data/annotations/bsub_gff_compressed.txt
+# run this python script to build a table of BSU with their corresponding gene name extracted from the bsub_gff_compressed
+python3 scripts/00_cds_finder.py
+
+echo "corresponding gene names and NCBI identifying values (BSU) have been added to ${PROJ_DIR}/data/annotations"

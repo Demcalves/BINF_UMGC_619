@@ -13,6 +13,7 @@ FASTQC_DEPTH=$(grep -c -v -E "^\s*$" $FASTQC_LIST)
 # calculate number of available threads for concurrent download
 MAX_THREAD=8
 THREAD_COUNT=$(($FASTQC_DEPTH > 0 ? $MAX_THREAD / $FASTQC_DEPTH : 1))
+echo "Thread count for ${SRA} this process: ${THREAD_COUNT}"
 # gather raw_data read
 fastqc "${RAW_DATA}/${SRA}_1.fastq" "${RAW_DATA}/${SRA}_2.fastq" \
             -o "$PROJ_DIR/results/qc" -t $THREAD_COUNT
