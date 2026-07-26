@@ -22,13 +22,28 @@ conda activate groupone
 
 # Install tools
 conda install -c bioconda -c conda-forge -y \
-    sra-tools fastqc fastp sortmerna salmon gffread
+    sra-tools fastqc fastp salmon gffread pandas seaborn
 
 set -u
 # Verify installations
+fasterq-dump --version
 fastqc --version
 fastp --version
-sortmerna --version
 salmon --version
 gffread --version
+# adding python and tools for visualization
 python3 --version
+pandas --version
+seaborn --version
+
+echo "help files for each tool downloaded are included in the main directory of this project for reference :)"
+
+# create helper files for reference
+# sortmerna -h > 'sortmerna --help'.txt
+fastqc --help > 'fastqc --help'.txt
+fastp --help > 'fastp --help'.txt
+gffread --help > 'gffread --help'.txt
+salmon index --help > 'salmon index --help'.txt
+salmon quant --help > 'salmon quant --help'.txt
+prefetch --help > 'prefetch --help'.txt
+fasterq-dump --help > 'fasterq-dump --help'.txt

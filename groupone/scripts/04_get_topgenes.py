@@ -7,7 +7,7 @@ import sys
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-from scipy.stats import zscore
+#from scipy.stats import zscore
 from pathlib import Path
 
 proj_dir = Path.cwd()
@@ -50,7 +50,15 @@ for sra_arg in sra_args_list:
         #print(topten_pairs_local)
         for gene,tpm in toptwenty_pairs_local:
             # append to amal_top_genes list for comparison
-            amal_top_genes.append((gene, sra_arg, tpm))
+            # boolean checker for passing a boolean
+            is_not_in_top_genes = True
+            for i in range(len(amal_top_genes)):
+                entry = amal_top_genes[i]
+                #print(entry)
+                if entry[0] == gene:
+                    is_not_in_top_genes = False
+            if (is_not_in_top_genes):
+                amal_top_genes.append((gene, sra_arg, tpm))
             cds_output_20.writelines(f"{gene}\t{sra_arg}\t{tpm}\n")
 
         for gene,tpm in topten_pairs_local:
@@ -63,10 +71,9 @@ for sra_arg in sra_args_list:
 topten_global = open(proj_dir/'results'/'topgenes_aggregate_10.txt', 'w')
 topten_global.writelines("Gene\tSRA\tTMP\n")
 toptwenty_pairs_global = sorted(amal_top_genes, key=lambda kv: kv[2], reverse=True)[:20]
-print(toptwenty_pairs_global)
+#print(toptwenty_pairs_global)
 # extract the top ten expressed genes across all of the samples
 topten_pairs_global = toptwenty_pairs_global[:10]
-print(topten_pairs_global)
 for gene, srr, tpm_val in topten_pairs_global:
     topten_global.writelines(f"{gene}\t{srr}\t{tpm_val:.2f}\n")
 topten_global.close()
@@ -74,17 +81,25 @@ topten_global.close()
 columns_list = ['Gene-ID'] # append these on with pandas
 row_values = []
 #print(columns_list)
-top_genes_set = set(gene for gene, srr, tpm_val in toptwenty_pairs_global)
-for gene in top_genes_set:
+#top_genes_set = set(gene for gene, srr, tpm_val in toptwenty_pairs_global)
+#print(top_genes_set)
+# extract every three values? 
+top_genes_list = []
+for i in range(0, len(toptwenty_pairs_global)):
+    top_gene = toptwenty_pairs_global[i][0]
+    top_genes_list.append(top_gene)
+for gene in top_genes_list:
     #print(amal_dict[gene])
     for srr, tpm in amal_dict[gene]:
         row_values.append((gene, srr, round(tpm, 2)))
 # create the data frame
 df = pd.DataFrame(row_values, columns=['Gene-ID', 'SRR-ID', 'TPM'])
 wide_df = df.pivot(index='Gene-ID', columns='SRR-ID', values='TPM')
-wide_df.to_csv(proj_dir/'results'/'topgenes_aggregate_20.txt', sep='\t')
-scaled_df = wide_df.apply(zscore, axis=1)
+gene_order = wide_df.max(axis=1).sort_values(ascending=False).index
+widedf_sorted = wide_df.reindex(gene_order)
+widedf_sorted.to_csv(proj_dir/'results'/'topgenes_aggregate_20.txt', sep='\t')
+#scaled_df = widedf_sorted.apply(zscore, axis=1)
 # take the csv and plot it
-sns.heatmap(wide_df, cmap='viridis', annot=True, fmt='.0f')
+sns.heatmap(widedf_sorted, cmap='viridis', annot=True, fmt='.0f')
 plt.tight_layout()
 plt.savefig(proj_dir/'results'/'top20genes_heatmap.png', dpi=300)

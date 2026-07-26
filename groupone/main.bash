@@ -7,10 +7,15 @@ set -euo pipefail
 PROJ_DIR=$(pwd) # run within the groupone directory
 #PROJ_DIR="${BASE_DIR}/groupone"
 RAWDATA_DIR="${PROJ_DIR}/data/raw"
-RNADB_DIR="${PROJ_DIR}/data/rnadb"
 REF_DIR="${PROJ_DIR}/data/reference"
 SRA_LIST="${PROJ_DIR}/sra.txt"
 SRA_DEPTH=$(grep -v -E "^\s*$" $SRA_LIST | wc -l)
+
+# sortmerna is computationally expensive later in the workflow
+# checking resources on running script to ensure that it can work
+
+CPU_AVAILABLE=$(lscpu | grep "On-line CPU(s) list" | awk '{print $4}' | sed 's/0-//' )
+RAM_AVAILABLE=$(free -g -h -t | awk '{print $4}' | grep -oE '[0-9]+Gi' | sed -n '3p' | sed 's/Gi//')
 
 ############## Step 1: Getting Data and References ##############
 # Make directories !!
@@ -22,17 +27,6 @@ fi
 
 # get the reference genome using the following script, storing in groupone/data/reference
 bash "scripts/00_get_reference.bash"
-
-# download rna database for sortmerna later following instructions from https://github.com/sortmerna/sortmerna
-if [ ! -f "${RNADB_DIR}/smr_v4.3_default_db.fasta" ]; then
-    echo "downloading rna databases from biocore for sortmerna"
-    # name of the file is default database that database.tar.gz but just want the default_db instead
-    wget -O "${RNADB_DIR/}smr_v4.3_default_db.fasta.gz" https://github.com/sortmerna/sortmerna/releases/download/v7.0.0/smr_v4.3_default_db.fasta.gz 
-    # unzip files into DB directory
-    gunzip ${RNADB_DIR}/smr_v4.3_default_db.fasta.gz 
-fi
-
-echo "RNA databases for SortMeRNA are downloaded and can be found in ${RNADB_DIR}"
 
 # get raw data using xargs
 touch ${PROJ_DIR}/sraToAdd.txt
@@ -119,7 +113,7 @@ else
     echo "Performing fastqc..."
     FASTQC_SCRIPT="${PROJ_DIR}/scripts/01_run_fastqc.bash"
     chmod -x "${FASTQC_SCRIPT}"
-    # this runs the get raw data script
+    # this runs the get fastqc script
     xargs -a "${WORKFLOW_LIST}" -P 4 -I{} bash "$FASTQC_SCRIPT" {}
 
     echo "FastQC complete for all test articles! Reports:"
@@ -159,18 +153,20 @@ else
     echo "Performing fastp trimming ..."
     FASTP_SCRIPT="${PROJ_DIR}/scripts/02_run_fastp.bash"
     chmod -x "${FASTP_SCRIPT}"
-    # this runs the get raw data script
+    # this runs the fastp script
     xargs -a "${WORKFLOW_LIST}" -P 4 -I{} bash "$FASTP_SCRIPT" {}
     echo "FastQC complete for all test articles! Reports:"
     ls "$PROJ_DIR/results/trimmed"/*.html
 fi
 
-# sortmerna logic 
+# Onto Salmon Alignment!
+# Regardless of computational prowess, will default to running one alignment at a time
+
 while read LINE; do
     echo $LINE
-    if [ ! -f "$PROJ_DIR/results/sorted/${LINE}_trimmed_sorted_r1.fastq" ]; then
-
-        echo "SortMeRNA for ${LINE} is not complete! Adding to ${WORKFLOW_LIST} for SortMeRNA"
+    if [ ! -d "$PROJ_DIR/results/counts/${LINE}" ]; then
+        
+        echo "Salmon Quant for ${LINE} is not complete! Adding to ${WORKFLOW_LIST} for Salmon Quant"
         if [ $(grep -v -E "^\s*$" $WORKFLOW_LIST | wc -l) -gt 0 ]; then
 
             echo "${LINE}" >> $WORKFLOW_LIST # append to list
@@ -179,27 +175,34 @@ while read LINE; do
         fi
     else
         # increment WORK_COUNT for each line downloaded 
-        echo "SortMeRNA for ${LINE} is complete! Incrementing count tracker for SortMeRNA"
-        WORK_COUNT=$(($WORK_COUNT + 1))
+        echo "Salmon Quant for ${LINE} is complete! Moving On"
     fi
 done < $SRA_LIST
 
-if [ $WORK_COUNT -eq $SRA_DEPTH ]; then
-    echo "All SortMeRNA files in ${SRA_LIST} have been processed and can be found in ${PROJ_DIR}/results/sorted"
-    echo "" > $WORKFLOW_LIST # overwrite the list if the work count equals the workflow list depth (all samples have been downloaded or process)
-    WORK_COUNT=0 # reset workcount variable
+while read line; do
+    if [ ! -d "${PROJ_DIR}/results/counts/${line}" ]; then
+        echo "count information for ${line} not found, running Salmon Quant script"
+        SALMON_SCRIPT="${PROJ_DIR}/scripts/03_run_salmon.bash"
+        chmod -x "${SALMON_SCRIPT}"
+        # these runs are serialized to increase performance
+        bash ${SALMON_SCRIPT} ${line}   
+    fi
+done < $WORKFLOW_LIST
 
-# execute the script if the work_count does not equal the workflow_depth list
-else 
-    # move onto rna filtering with sortmerna
-    echo "sorting rna reads with SortMeRNA"
-    SORTRNA_SCRIPT="${PROJ_DIR}/scripts/02_run_sortmerna.bash"
-    chmod -x "${SORTRNA_SCRIPT}"
-    # this runs the get raw data script
-    xargs -a "${WORKFLOW_LIST}" -P 4 -I{} bash "$SORTRNA_SCRIPT" {}
-    
-    echo "SortMeRNA complete for all test articles! Reports:"
-    ls "$PROJ_DIR/results/sorted"/*.html
-fi
+# this python script will get the top genes for each SRA file in results/counts
+# Then aggregate all of the values into one library that gets the top 20 
+# total and top 10 total as a tsv and txt file respectively for reporting
+# finally it makes a plot
+TOPGENES_SCRIPT="${PROJ_DIR}/scripts/04_get_topgenes.py"
+python3 ${TOPGENES_SCRIPT} ${SRA_LIST}
+# broke down the final statement below
+echo "All SRA genes have been quantified. Top Genes have been aggregated"
+echo "and tallied and stored in ${PROJ_DIR}/results as topgenes_aggregate.txt"
+# after iterating through this create a new file using the annotations/bsub_gff_cds.txt file
+> ${PROJ_DIR}/results/topgenes_aggregate_20_reference.txt
+awk 'NR>1 {print $1}' ${PROJ_DIR}/results/topgenes_aggregate_20.txt | while read line; do
+    grep "$line" ${PROJ_DIR}/data/annotations/bsub_gff_cds.txt >> ${PROJ_DIR}/results/topgenes_aggregate_20_reference.txt
+done 
 
-rm $WORKFLOW_LIST
+# Remove WORKFLOW_LIST
+#rm $WORKFLOW_LIST
