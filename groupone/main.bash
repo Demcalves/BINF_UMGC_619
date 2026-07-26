@@ -8,16 +8,12 @@ PROJ_DIR=$(pwd) # run within the groupone directory
 #PROJ_DIR="${BASE_DIR}/groupone"
 RAWDATA_DIR="${PROJ_DIR}/data/raw"
 REF_DIR="${PROJ_DIR}/data/reference"
-SRA_LIST="${PROJ_DIR}/sra.txt"
 SRA_DEPTH=$(grep -v -E "^\s*$" $SRA_LIST | wc -l)
 
-# sortmerna is computationally expensive later in the workflow
-# checking resources on running script to ensure that it can work
+# the main bash script is implemented with a system argument, a list of SRAs from sra.txt
+SRA_LIST=$1
 
-CPU_AVAILABLE=$(lscpu | grep "On-line CPU(s) list" | awk '{print $4}' | sed 's/0-//' )
-RAM_AVAILABLE=$(free -g -h -t | awk '{print $4}' | grep -oE '[0-9]+Gi' | sed -n '3p' | sed 's/Gi//')
-
-############## Step 1: Getting Data and References ##############
+############## Step 1: Getting Data, References and Building Indexes ##############
 # Make directories !!
 # It is naively assumed that if the user does not have the data directory, 
 # then the other directories are likely to be missing or not valid.
@@ -70,6 +66,8 @@ rm $DWND_LIST
 # calling this script to build the transcriptome and index with Salmon
 bash "scripts/01_build_index.bash"
 
+############## Step 2: Quality Control Processing ##############
+
 # For the rest of the workflow, it is naively assumed that if the FASTQC step below 
 # for an expected result has not been performed, that the subsequent steps of trimming, 
 # aligning and differential expression have also not been performed. The WORKFLOW_LIST
@@ -83,6 +81,8 @@ WORKFLOW_LIST="${PROJ_DIR}/workflow_list.txt"
 # Run FastQC on Gathered files in rawdata/raw
 # Run FastQC on both files
 WORK_COUNT=0 
+
+############## Step 2.1 : FASTQC ##############
 
 # figure out which FASTQC files, if ran once are done
 while read LINE; do
@@ -121,6 +121,24 @@ else
 
 fi
 
+# Aggregate FASTQC reports
+if [ ! -d "${PROJ_DIR}/results/multiqc/pretrim" ]; then
+    # run multiqc if the directory not detected
+    multiqc $PROJ_DIR/results/qc/ -o $PROJ_DIR/results/multiqc/pretrim --export
+    if [ ! -d "$PROJ_DIR/figures/pre_multiqc_plots" ]; then
+            mkdir $PROJ_DIR/figures/pre_multiqc_plots
+            cp $PROJ_DIR/results/multiqc/pretrim/multiqc_plots/png/* $PROJ_DIR/figures/pre_multiqc_plots
+            echo "Copying PNG of multi-qc plots to $PROJ_DIR/figures/pre_multiqc_plots"
+    fi
+else
+    echo "Multi-QC reports for FastQC can be found in ${PROJ_DIR}/results/multiqc/pretrim"
+    echo "PNG files for multi-qc plots are accessible from $PROJ_DIR/figures/pre_multiqc_plots"
+fi
+
+# generate a Multi-QC dataframe using Pandas showing total sequences and percent duplicates for each SRR pair read
+python3 scripts/01_get_fastqc_table.py
+
+############## Step 2.2 : FASTP trimming ##############
 # Fastp logic, similar logic as above
 while read LINE; do
     echo $LINE
@@ -159,7 +177,34 @@ else
     ls "$PROJ_DIR/results/trimmed"/*.html
 fi
 
-# Onto Salmon Alignment!
+# Summarize all Fastp reports into a FASTP_Aggregate Summary
+> $PROJ_DIR/results/trimmed/fastp_aggregate_summary.txt
+while read line; do
+    head -34 $PROJ_DIR/results/trimmed/${line}_fastp_report.json | \
+    sed 's/{//g' | sed 's/}//g' | sed 's/,//g' | sed 's/\s//g' | \
+    sed "s/\"summary\"/\"${line} summary\"/g" \
+    >> $PROJ_DIR/results/trimmed/fastp_aggregate_summary.txt
+done < $SRA_LIST
+
+# Aggregate all FastP reports from earlier using MultiQc
+if [ ! -d "$PROJ_DIR/results/multiqc/posttrim" ]; then
+
+    multiqc $PROJ_DIR/results/trimmed/ -o $PROJ_DIR/results/multiqc/posttrim --export
+    if [ ! -d "$PROJ_DIR/figures/post_multiqc_plots" ]; then
+        # save all exported pngs to post_multiqc_plots
+        mkdir $PROJ_DIR/figures/post_multiqc_plots
+        cp $PROJ_DIR/results/multiqc/posttrim/multiqc_plots/png/* $PROJ_DIR/figures/post_multiqc_plots
+        echo "Copying PNG of multi-qc plots to $PROJ_DIR/figures/post_multiqc_plots"
+    fi
+
+else
+    echo "Multi-QC reports for FastP can be found in ${PROJ_DIR}/results/multiqc/posttrim"
+    echo "PNG files for multi-qc plots are accessible from $PROJ_DIR/figures/post_multiqc_plots"
+fi
+# open the html link to the html 
+# generate a report using get_multiqc_graphs
+python3 scripts/02_get_multiqc_graphs.py $SRA_LIST
+############### Step 3: Alignment and Quantification with Salmon ##############
 # Regardless of computational prowess, will default to running one alignment at a time
 
 while read LINE; do
@@ -189,6 +234,8 @@ while read line; do
     fi
 done < $WORKFLOW_LIST
 
+############### Step 4: Generate Visualization with Python ##############
+
 # this python script will get the top genes for each SRA file in results/counts
 # Then aggregate all of the values into one library that gets the top 20 
 # total and top 10 total as a tsv and txt file respectively for reporting
@@ -201,8 +248,7 @@ echo "and tallied and stored in ${PROJ_DIR}/results as topgenes_aggregate.txt"
 # after iterating through this create a new file using the annotations/bsub_gff_cds.txt file
 > ${PROJ_DIR}/results/topgenes_aggregate_20_reference.txt
 awk 'NR>1 {print $1}' ${PROJ_DIR}/results/topgenes_aggregate_20.txt | while read line; do
-    grep "$line" ${PROJ_DIR}/data/annotations/bsub_gff_cds.txt >> ${PROJ_DIR}/results/topgenes_aggregate_20_reference.txt
+    grep "$line" ${PROJ_DIR}/data/annotations/bsub_gff_cds.txt >> ${PROJ_DIR}/topgenes_aggregate_20_reference.txt
 done 
 
-# Remove WORKFLOW_LIST
-#rm $WORKFLOW_LIST
+rm $WORKFLOW_LIST
