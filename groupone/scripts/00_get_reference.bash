@@ -8,10 +8,10 @@ cd "${PROJ_DIR}/data/reference"
 # download the reference genome for bacillus subtilis from NCBI https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_000009045.1/
 # downloading Genome in addition to GFF + GTF files
 if [ ! -f "bsubtilis_genome.fna" ]; then
-
-    wget -w 10 -P https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/009/045/GCF_000009045.1_ASM904v1/GCF_000009045.1_ASM904v1_genomic.gff.gz
-    wget -w 10 -P https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/009/045/GCF_000009045.1_ASM904v1/GCF_000009045.1_ASM904v1_genomic.gtf.gz
-    wget -w 10 -P https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/009/045/GCF_000009045.1_ASM904v1/GCF_000009045.1_ASM904v1_genomic.fna.gz
+    echo "downloading B. subtilis reference genome from NCBI" 
+    wget -w 10 https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/009/045/GCF_000009045.1_ASM904v1/GCF_000009045.1_ASM904v1_genomic.gff.gz
+    wget -w 10 https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/009/045/GCF_000009045.1_ASM904v1/GCF_000009045.1_ASM904v1_genomic.gtf.gz
+    wget -w 10 https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/009/045/GCF_000009045.1_ASM904v1/GCF_000009045.1_ASM904v1_genomic.fna.gz
 
     # unpack and rename files
     gunzip GCF_000009045.1_ASM904v1_genomic.gff.gz
