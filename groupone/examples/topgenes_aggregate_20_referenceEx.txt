@@ -1,0 +1,60 @@
+NP_388746.1	gene-BSU_08660	small acid-soluble spore protein (gamma-type SASP)
+NP_388804.1	gene-BSU_09230	putative CBS containing enzyme (sporulation-/ germination-related)
+NP_388072.1	gene-BSU_01910	sporulation killing factor A
+NP_389056.1	gene-BSU_11740	spore coat protein (insoluble fraction%2C crust layer)
+NP_390102.1	gene-BSU_22200	spore coat protein (inner)
+NP_389058.1	gene-BSU_11760	spore coat protein (insoluble fraction)
+NP_389057.1	gene-BSU_11750	outer spore coat protein (crust layer%2C insoluble fraction)
+NP_390662.1	gene-BSU_27840	morphogenetic protein associated with SpoVID
+NP_390161.1	gene-BSU_22800	morphogenetic stage IV sporulation protein
+YP_003097702.1	gene-BSU_11139	conserved hypothetical protein%3B genus orphan
+NP_390719.2	gene-BSU_28410	transcriptional regulator required for the expression of late spore coat genes
+NP_388911.2	gene-BSU_10300	serine alkaline protease (Ca(2+)-dependent subtilisin E)
+NP_390624.1	gene-BSU_27470	hypothetical protein
+NP_391837.1	gene-BSU_39580	inner spore coat protein
+NP_390835.1	gene-BSU_29570	small acid-soluble spore protein (alpha-type SASP)
+NP_391671.1	gene-BSU_37920	inner spore coat protein
+NP_389060.1	gene-BSU_11780	spore coat protein (insoluble fraction)
+NP_389810.1	gene-BSU_19280	conserved protein of unknown function (sporulation-related)
+NP_389554.1	gene-BSU_16720	PRC barrel protein involved in sporulation
+NP_388106.1	gene-BSU_02240	extracellular glutamyl-endopeptidase
+NP_388746.1	gene-BSU_08660	small acid-soluble spore protein (gamma-type SASP)
+NP_388804.1	gene-BSU_09230	putative CBS containing enzyme (sporulation-/ germination-related)
+NP_388072.1	gene-BSU_01910	sporulation killing factor A
+NP_389056.1	gene-BSU_11740	spore coat protein (insoluble fraction%2C crust layer)
+NP_390102.1	gene-BSU_22200	spore coat protein (inner)
+NP_389058.1	gene-BSU_11760	spore coat protein (insoluble fraction)
+NP_389057.1	gene-BSU_11750	outer spore coat protein (crust layer%2C insoluble fraction)
+NP_390662.1	gene-BSU_27840	morphogenetic protein associated with SpoVID
+NP_390161.1	gene-BSU_22800	morphogenetic stage IV sporulation protein
+YP_003097702.1	gene-BSU_11139	conserved hypothetical protein%3B genus orphan
+NP_390719.2	gene-BSU_28410	transcriptional regulator required for the expression of late spore coat genes
+NP_388911.2	gene-BSU_10300	serine alkaline protease (Ca(2+)-dependent subtilisin E)
+NP_390624.1	gene-BSU_27470	hypothetical protein
+NP_391837.1	gene-BSU_39580	inner spore coat protein
+NP_390835.1	gene-BSU_29570	small acid-soluble spore protein (alpha-type SASP)
+NP_391671.1	gene-BSU_37920	inner spore coat protein
+NP_389060.1	gene-BSU_11780	spore coat protein (insoluble fraction)
+NP_389810.1	gene-BSU_19280	conserved protein of unknown function (sporulation-related)
+NP_389554.1	gene-BSU_16720	PRC barrel protein involved in sporulation
+NP_388106.1	gene-BSU_02240	extracellular glutamyl-endopeptidase
+NP_388746.1	gene-BSU_08660	small acid-soluble spore protein (gamma-type SASP)
+NP_388804.1	gene-BSU_09230	putative CBS containing enzyme (sporulation-/ germination-related)
+NP_388072.1	gene-BSU_01910	sporulation killing factor A
+NP_389056.1	gene-BSU_11740	spore coat protein (insoluble fraction%2C crust layer)
+NP_390102.1	gene-BSU_22200	spore coat protein (inner)
+NP_389058.1	gene-BSU_11760	spore coat protein (insoluble fraction)
+NP_389057.1	gene-BSU_11750	outer spore coat protein (crust layer%2C insoluble fraction)
+NP_390662.1	gene-BSU_27840	morphogenetic protein associated with SpoVID
+NP_390161.1	gene-BSU_22800	morphogenetic stage IV sporulation protein
+YP_003097702.1	gene-BSU_11139	conserved hypothetical protein%3B genus orphan
+NP_390719.2	gene-BSU_28410	transcriptional regulator required for the expression of late spore coat genes
+NP_388911.2	gene-BSU_10300	serine alkaline protease (Ca(2+)-dependent subtilisin E)
+NP_390624.1	gene-BSU_27470	hypothetical protein
+NP_391837.1	gene-BSU_39580	inner spore coat protein
+NP_390835.1	gene-BSU_29570	small acid-soluble spore protein (alpha-type SASP)
+NP_391671.1	gene-BSU_37920	inner spore coat protein
+NP_389060.1	gene-BSU_11780	spore coat protein (insoluble fraction)
+NP_389810.1	gene-BSU_19280	conserved protein of unknown function (sporulation-related)
+NP_389554.1	gene-BSU_16720	PRC barrel protein involved in sporulation
+NP_388106.1	gene-BSU_02240	extracellular glutamyl-endopeptidase

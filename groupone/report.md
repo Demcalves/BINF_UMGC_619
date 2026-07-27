@@ -51,10 +51,10 @@
     - Summarized total reads read quality, GC content and duplication that can be found as results/total_seqs_qc_summary_table.csv
     - Summarized total reads and percent duplication for generating a table in the final report as results/total_seqs_duplicates_table.csv
 - **Deliverables:**
-    ![FastQC Per Base Sequence Quality](figures/pre_multiqc_plots/mqc_fastqc_per_base_sequence_quality_plot_1.png) 
+    ![FastQC Per Base Sequence Quality](examples/mqc_fastqc_per_base_sequence_quality_plotEx.png) 
     *Figure 1: Quality Scores Shown Before Read-Adapter Trimming*
 
-    ![FastQC Adapter Content Counts](figures/pre_multiqc_plots/mqc_fastqc_adapter_content_plot_1.png) 
+    ![FastQC Adapter Content Counts](examples/mqc_fastqc_adapter_content_plotEx.png) 
     *Figure 2: Total Adapter Contamination, Before Read-Adapter Trimming*
 
     | Sample      |   total_sequences |   percent_duplicates |   percent_gc |   read_quality |
@@ -78,10 +78,10 @@
     - Generated figures using a Python script embedded in the main script.
     - Generated a table of total reads before and after alongside figures.
 - **Deliverables:**
-    ![Phred Quality Scores Before and After Trimming](figures/q30_before_after.png)
+    ![Phred Quality Scores Before and After Trimming](examples/q30_before_afterEx.png)
     *Figure3: Generated Table of Phred Q30 Scores Before and After Fastp Trimming*
 
-    ![Reads Before and After Trimming](figures/reads_before_after.png)
+    ![Reads Before and After Trimming](examples/reads_before_afterEx.png)
     *Figure4: Sequence Reads Before and After Trimming For Comparison Alongside Figure 3*
 
     | sample      |   total_reads_before |   total_reads_after | 
@@ -133,7 +133,7 @@
     - Created data frames using Pandas to organize data efficiently and Seaborn to visualize data in a heatmap figure for top 20 expressed genes.
     - Used MatPltLib.pyplot to plot all figures generated.
 - **Deliverables:**
-    ![Heatmap of top 20 genes based on quantification by Salmon](figures/top20genes_heatmap.png)
+    ![Heatmap of top 20 genes based on quantification by Salmon](examples/top20genes_heatmapEx.png)
     *Figure8: Heatmap of top 20 genes based on read count quantification by Salmon*
 
 - **Interpretation:**
