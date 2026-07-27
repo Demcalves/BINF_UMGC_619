@@ -15,6 +15,7 @@ MAX_THREAD=8
 THREAD_COUNT=$(($SRX_DEPTH > 0 ? $MAX_THREAD / $SRX_DEPTH : 1))
 # gather raw_data read
 prefetch "${SRA}" -O "${RAW_DATA}"
+echo "prefetch complete for ${SRA}, moving onto fasterq-dump"
 fasterq-dump "${SRA}" -O "${RAW_DATA}" --split-files --threads "${THREAD_COUNT}" # this download might be slow
 
 # perform cleanup step removing sra directory and tmp files
