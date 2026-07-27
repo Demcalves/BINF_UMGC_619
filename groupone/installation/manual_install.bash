@@ -1,59 +1,76 @@
-# first install python
+# making a directory to handle all tools
+cd /opt
+
+# first install python, sudo apt versions are a behind compared to anaconda's repository
+echo "installing python3 and pip3"
 sudo apt-get update
-sudo apt-get install -y python3 python3-venv python3-dev
-python3 --version
+sudo apt-get install -y python3
+python3 --version # this sudo apt function at least gets python >= 3.11
 
 # Install pip for other binary downloads like for multiqc or python based tools
-sudo apt-get update
 sudo apt-get install -y python3-pip
 pip3 --version 
 
-cd /opt
-wget https://ftp-trace.ncbi.nlm.nih.gov/sra-pub/sdk/current/sratoolkit.current-ubuntu64.tar.gz
-tar -xzf sratoolkit.current-ubuntu64.tar.gz
-export PATH="/opt/sratoolkit.*-ubuntu64/bin:$PATH"   # add to ~/.bashrc to persist
-prefetch --version   # confirm it works
+# pause between installations to give user an opportunity to monitor
+sleep 5s
 
-sudo apt-get update
-sudo apt-get install -y default-jre unzip
-cd /opt
-wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.12.1.zip
-unzip fastqc_v0.12.1.zip
-chmod +x FastQC/fastqc
-export PATH="/opt/FastQC:$PATH"   # add to ~/.bashrc
+# Installing SRA-Tools. Code snippet below follows instructions from NCBI https://github.com/ncbi/sra-tools/wiki/01.-Downloading-SRA-Toolkit
+# install perl and dependencies
+sudo apt-get --quiet install --yes libxml-libxml-perl
+echo "installing sra toolkit to /usr/local/ncbi"
+
+sudo rm -rf .ncbi /usr/local/ncbi /etc/ncbi /etc/profile.d/sra-tools* # remove old install if any
+wget https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/3.4.1/sratoolkit.3.4.1-ubuntu64.tar.gz
+sudo tar -xzf /opt/sratoolkit.3.4.1-ubuntu64.tar.gzz # unzips to salmon-latest_linux_x86_64
+sudo mv salmon-latest_linux_x86_64 sratoolkit-3.4.1 # rename the version to a different name
+export PATH="/opt/sratoolkit-3.4.1/bin:$PATH"   # add to ~/.bashrc
+sudo vdbconfig --interactive # the user will need to confirm. Default parameters for NCBI sra-tools is suffice
+prefetch --version   # confirm it works
+fasterq-dump --version
+
+# fastqc installation block // defaulting to sudo apt-get install
+sleep 5s
+echo "Preparing to install FastQc version 0.11.9 and JDK 11 binaries for tool function"
+sudo apt-get install fastqc -y
 fastqc --version
 
-sudo mkdir -p /opt/fastp
-sudo wget http://opengene.org/fastp/fastp -O /opt/fastp/fastp
-sudo chmod +x /opt/fastp/fastp
-export PATH="/opt/fastp:$PATH"   # add to ~/.bashrc
+# fastp installation block
+sleep 5s
+echo "installing fastp from OpenGene, version 1.3.6"
+sudo wget https://github.com/OpenGene/fastp/archive/refs/tags/v1.3.6.tar.gz
+sudo tar -xzf /opt/fastpv1.3.6.tar.gz 
+sudo mv v1.3.6.tar.gz fastpv1.3.6.tar.gz
+export PATH="/opt/fastpv1.3.6/bin:$PATH"   # add to ~/.bashrc
 fastp --version
 
-bash
-pip3 install multiqc --break-system-packages
-multiqc --version
-
-cd /opt
-wget https://github.com/COMBINE-lab/salmon/releases/download/v1.10.0/salmon-1.10.0_linux_x86_64.tar.gz
-tar -xzf salmon-1.10.0_linux_x86_64.tar.gz
-export PATH="/opt/salmon-1.10.0_linux_x86_64/bin:$PATH"   # add to ~/.bashrc
+# installation block for Salmon
+sleep 5s
+echo "Preparing to install Salmon from COMBINE lab, version 1.10.0"
+sudo wget https://github.com/COMBINE-lab/salmon/releases/download/v1.10.0/salmon-1.10.0_linux_x86_64.tar.gz 
+sudo tar -xzf salmon-1.10.0_linux_x86_64.tar.gz # unzips to salmon-latest_linux_x86_64
+sudo mv salmon-latest_linux_x86_64 salmon-1.10.0
+export PATH="/opt/salmon-1.10.0/bin:$PATH"   # add to ~/.bashrc
 salmon --version
 
-cd /opt
-wget https://github.com/gpertea/gffread/releases/download/v0.12.7/gffread-0.12.7.Linux_x86_64.tar.gz
-tar -xzf gffread-0.12.7.Linux_x86_64.tar.gz
-export PATH="/opt/gffread-0.12.7.Linux_x86_64:$PATH"   # add to ~/.bashrc
+# installation block for gffread
+sleep 5
+echo "Preparing to install gffread version 0.12.7"
+sudo wget https://github.com/gpertea/gffread/releases/download/v0.12.7/gffread-0.12.7.Linux_x86_64.tar.gz
+sudo mv gffread-0.12.7.Linux_x86_64.tar.gz gffread-0.12.7.tar.gz
+sudo tar -xzf gffread-0.12.7.tar.gz
+export PATH="/opt/gffread-0.12.7:$PATH"   # add to ~/.bashrc
 gffread --version
 
-pip3 install pandas seaborn tabulate --break-system-packages
+sleep 5
+echo "Preparing to install additional python tools: multiqc pandas seaborn tabulate"
+pip3 install multiqc pandas seaborn tabulate --break-system-packages
 python3 -c "import pandas, seaborn; print(pandas.__version__, seaborn.__version__)"
 
-# move the path of all of the tools
+# move the path of all of the tools installed manually without pip or debian
 cat >> ~/.bashrc << 'EOF'
-export PATH="/opt/sratoolkit.*-ubuntu64/bin:$PATH"
-export PATH="/opt/FastQC:$PATH"
-export PATH="/opt/fastp:$PATH"
-export PATH="/opt/salmon-latest_linux_x86_64/bin:$PATH"
-export PATH="/opt/gffread-0.12.7.Linux_x86_64:$PATH"
+export PATH="/opt/sratoolkit-3.4.1/bin:$PATH"
+export PATH="/opt/fastpv1.3.6/bin:$PATH"
+export PATH="/opt/salmon-1.10.0/bin:$PATH"
+export PATH="/opt/gffread-0.12.7/bin:$PATH"
 EOF
 source ~/.bashrc
