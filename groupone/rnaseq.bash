@@ -215,12 +215,12 @@ else
 fi
 
 # Summarize all Fastp reports into a FASTP_Aggregate Summary
-> $PROJ_DIR/results/trimmed/fastp_aggregate_summary.txt
+> $OUTPUT_DIR/fastp_aggregate_summary.txt
 while read line; do
     head -34 $PROJ_DIR/results/trimmed/${line}_fastp_report.json | \
     sed 's/{//g' | sed 's/}//g' | sed 's/,//g' | sed 's/\s//g' | \
     sed "s/\"summary\"/\"${line} summary\"/g" \
-    >> $PROJ_DIR/results/trimmed/fastp_aggregate_summary.txt
+    >> $OUTPUT_DIR/fastp_aggregate_summary.txt
 done < $SRA_LIST
 
 # Aggregate all FastP reports from earlier using MultiQc
