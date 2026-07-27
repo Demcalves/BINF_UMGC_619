@@ -30,17 +30,14 @@ fasterq-dump --version
 
 # fastqc installation block // defaulting to sudo apt-get install
 sleep 5s
-echo "Preparing to install FastQc version 0.11.9 and JDK 11 binaries for tool function"
+echo "Preparing to install FastQc version 0.11.9 and JDK 11 binaries for tool function from Debian"
 sudo apt-get install fastqc -y
 fastqc --version
 
 # fastp installation block
 sleep 5s
-echo "installing fastp from OpenGene, version 1.3.6"
-sudo wget https://github.com/OpenGene/fastp/archive/refs/tags/v1.3.6.tar.gz
-sudo tar -xzf /opt/fastpv1.3.6.tar.gz 
-sudo mv v1.3.6.tar.gz fastpv1.3.6.tar.gz
-export PATH="/opt/fastpv1.3.6/bin:$PATH"   # add to ~/.bashrc
+echo "Preparing to install fastp version 0.20.1 from Debian"
+sudo apt-get install fastp -y
 fastp --version
 
 # installation block for Salmon
@@ -54,11 +51,10 @@ salmon --version
 
 # installation block for gffread
 sleep 5
-echo "Preparing to install gffread version 0.12.7"
-sudo wget https://github.com/gpertea/gffread/releases/download/v0.12.7/gffread-0.12.7.Linux_x86_64.tar.gz
-sudo mv gffread-0.12.7.Linux_x86_64.tar.gz gffread-0.12.7.tar.gz
-sudo tar -xzf gffread-0.12.7.tar.gz
-export PATH="/opt/gffread-0.12.7:$PATH"   # add to ~/.bashrc
+echo "Preparing to install gffread version 0.12.7 from Debian"
+sleep 5s
+echo "Preparing to install gffread version 0.11.9 and JDK 11 binaries for tool function"
+sudo apt-get install gffread -y
 gffread --version
 
 sleep 5
@@ -69,8 +65,7 @@ python3 -c "import pandas, seaborn; print(pandas.__version__, seaborn.__version_
 # move the path of all of the tools installed manually without pip or debian
 cat >> ~/.bashrc << 'EOF'
 export PATH="/opt/sratoolkit-3.4.1/bin:$PATH"
-export PATH="/opt/fastpv1.3.6/bin:$PATH"
 export PATH="/opt/salmon-1.10.0/bin:$PATH"
-export PATH="/opt/gffread-0.12.7/bin:$PATH"
+export PATH="/opt/gffread-0.12.7:$PATH"
 EOF
 source ~/.bashrc
