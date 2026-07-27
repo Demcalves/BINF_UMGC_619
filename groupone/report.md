@@ -51,7 +51,7 @@
     - Summarized total reads read quality, GC content and duplication that can be found as results/total_seqs_qc_summary_table.csv
     - Summarized total reads and percent duplication for generating a table in the final report as results/total_seqs_duplicates_table.csv
 - **Deliverables:**
-    ![FastQC Per Base Sequence Quality](examples/mqc_fastqc_per_base_sequence_quality_plotEx.png) 
+    ![FastQC Per Base Sequence Quality](examples/mqc_fastqc_per_sequence_quality_scores_plotEx.png) 
     *Figure 1: Quality Scores Shown Before Read-Adapter Trimming*
 
     ![FastQC Adapter Content Counts](examples/mqc_fastqc_adapter_content_plotEx.png) 
