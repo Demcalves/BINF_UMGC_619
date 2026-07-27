@@ -1,8 +1,8 @@
 import pandas as pd
-import json
+import json, sys
 from pathlib import Path
 proj_dir = Path.cwd()
-
+output_dir = sys.argv[1]
 # get raw data and duplicate comparison table for FASTQC
 with open(f"{proj_dir}/results/multiqc/pretrim/multiqc_data/multiqc_data.json") as fastqc_f:
     fastqc_data = json.load(fastqc_f)
@@ -35,8 +35,8 @@ grouped_comp = df_comp.groupby('Sample').agg(
     percent_duplicates=('percent_duplicates', 'mean') # averaging duplication percentage between mate pairs R1 / R2
 ).reset_index()
 
-grouped_comp.to_csv(f"{proj_dir}/total_seqs_duplicates_table.csv", index=False)
-print(f"Dataframe saved to {proj_dir}/results/total_seqs_duplicates_table.csv")
+grouped_comp.to_csv(f"{output_dir}/total_seqs_duplicates_table.csv", index=False)
+print(f"Dataframe saved to {output_dir}/total_seqs_duplicates_table.csv")
 #print(grouped_comp)
 
 grouped_sum = df_sum.groupby('Sample').agg(
@@ -46,8 +46,8 @@ grouped_sum = df_sum.groupby('Sample').agg(
     read_quality=('read_quality', 'mean')
 ).reset_index()
 
-grouped_sum.to_csv(f"{proj_dir}/total_seqs_qc_summary_table.csv", index=False)
-print(f"Dataframe saved to {proj_dir}/results/total_seqs_qc_summary_table.csv")
+grouped_sum.to_csv(f"{output_dir}/total_seqs_qc_summary_table.csv", index=False)
+print(f"Dataframe saved to {proj_dir}/{output_dir}/total_seqs_qc_summary_table.csv")
 print(grouped_sum)
 
 

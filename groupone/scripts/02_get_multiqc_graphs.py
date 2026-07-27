@@ -13,6 +13,7 @@ sra_arg_file = sys.argv[1]
 with open(sra_arg_file, 'r') as sra_f:
     sra_list = sra_f.read().splitlines()
 
+output_dir = sys.argv[2]
 records = []
 
 for sra in sra_list:
@@ -52,7 +53,7 @@ ax.set_ylabel('Total Reads')
 ax.set_title('Read Counts Before vs After FastP trimming')
 ax.legend()
 plt.tight_layout()
-plt.savefig(f"{proj_dir}/figures/reads_before_after.png", dpi=300)
+plt.savefig(f"{output_dir}/reads_before_after.png", dpi=300)
 
 # generate a figure for q30 rates
 fig, ax = plt.subplots()
@@ -64,8 +65,8 @@ ax.set_ylabel('Q30 Rate (%)')
 ax.set_title('Q30 Quality Rate Before vs After Trimming')
 ax.legend()
 plt.tight_layout()
-plt.savefig(f"{proj_dir}/figures/q30_before_after.png", dpi=300)
+plt.savefig(f"{output_dir}/q30_before_after.png", dpi=300)
 
 # save the data 
-df.to_csv(f"{proj_dir}/fastqc_fastp_comparison.csv", index=False)
+df.to_csv(f"{output_dir}/fastqc_fastp_comparison.csv", index=False)
 print(df.to_markdown(index=False))

@@ -13,6 +13,7 @@ from pathlib import Path
 proj_dir = Path.cwd()
 # this script only takes one argument
 sra_list = str(sys.argv[1]) # should be a string
+output_dir = sys.argv[2]
 
 with open(sra_list, 'r') as sra_f:
     sra_args_list = sra_f.read().splitlines()
@@ -68,7 +69,7 @@ for sra_arg in sra_args_list:
 # now that we have done the local files, sort the almagamated
 
 
-topten_global = open(proj_dir/'topgenes_aggregate_10.txt', 'w')
+topten_global = open(f"{output_dir}/topgenes_aggregate_10.txt", 'w')
 topten_global.writelines("Gene\tSRA\tTMP\n")
 toptwenty_pairs_global = sorted(amal_top_genes, key=lambda kv: kv[2], reverse=True)[:20]
 #print(toptwenty_pairs_global)
@@ -97,9 +98,9 @@ df = pd.DataFrame(row_values, columns=['Gene-ID', 'SRR-ID', 'TPM'])
 wide_df = df.pivot(index='Gene-ID', columns='SRR-ID', values='TPM')
 gene_order = wide_df.max(axis=1).sort_values(ascending=False).index
 widedf_sorted = wide_df.reindex(gene_order)
-widedf_sorted.to_csv(proj_dir/'topgenes_aggregate_20.txt', sep='\t')
+widedf_sorted.to_csv(f"{output_dir}/topgenes_aggregate_20.txt", sep='\t')
 #scaled_df = widedf_sorted.apply(zscore, axis=1)
 # take the csv and plot it
 sns.heatmap(widedf_sorted, cmap='viridis', annot=True, fmt='.0f')
 plt.tight_layout()
-plt.savefig(proj_dir/'figures'/'top20genes_heatmap.png', dpi=300)
+plt.savefig(f"{output_dir}/top20genes_heatmap.png", dpi=300)

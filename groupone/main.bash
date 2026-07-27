@@ -1,25 +1,62 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# run the conda_env_setup
-#bash conda_env_setup.bash
 
-PROJ_DIR=$(pwd) # run within the groupone directory
-#PROJ_DIR="${BASE_DIR}/groupone"
-RAWDATA_DIR="${PROJ_DIR}/data/raw"
-REF_DIR="${PROJ_DIR}/data/reference"
-SRA_DEPTH=$(grep -v -E "^\s*$" $SRA_LIST | wc -l)
 
+############## Step 0: Handling Arguments and Input ##############
 # the main bash script is implemented with a system argument, a list of SRAs from sra.txt
 SRA_LIST=$1
+
+PROJ_DIR=$(pwd) # run within the groupone directory
+
+if [ ! -d "data" ]; then
+    bash ${PROJ_DIR}/scripts/00_make_dir.bash
+fi
+RAWDATA_DIR="${PROJ_DIR}/data/raw"
+REF_DIR="${PROJ_DIR}/data/reference"
+# Error handling for the mandatory argument
+if [ -z "$SRA_LIST" ]; then
+    echo "Error: No SRA list file provided."
+    echo "Usage: $0 <sra_list_file> [output_label]"
+    exit 1
+fi
+
+if [ ! -f "$SRA_LIST" ]; then
+    echo "Error: File '$SRA_LIST' does not exist or is not a regular file."
+    exit 1
+fi
+
+if [ ! -s "$SRA_LIST" ]; then
+    echo "Error: File '$SRA_LIST' is empty."
+    exit 1
+fi
+
+# get the number of entries in SRA_LIST
+SRA_DEPTH=$(grep -v -E "^\s*$" $SRA_LIST | wc -l)
+
+# handle the optional argument ... the user can provide an appropriate name for their output directory of the ran job
+SRA_BASENAME=$(basename "$SRA_LIST")
+SRA_BASENAME="${SRA_BASENAME%.*}"
+DEFAULT_LABEL="${SRA_BASENAME}_$(date +%Y%m%d)"
+
+OUTPUT_LABEL="${2:-$DEFAULT_LABEL}"
+OUTPUT_LABEL=$(echo "$OUTPUT_LABEL" | tr -cd '[:alnum:]_-')
+
+if [ -z "$OUTPUT_LABEL" ]; then
+    echo "Error: output label is empty after sanitization."
+    exit 1
+fi
+
+OUTPUT_DIR="${PROJ_DIR}/${OUTPUT_LABEL}"
+mkdir -p "$OUTPUT_DIR"
+
+echo "Output directory: $OUTPUT_DIR"
 
 ############## Step 1: Getting Data, References and Building Indexes ##############
 # Make directories !!
 # It is naively assumed that if the user does not have the data directory, 
 # then the other directories are likely to be missing or not valid.
-if [ ! -d "data" ]; then
-    bash ${PROJ_DIR}/make_dir.bash
-fi
+
 
 # get the reference genome using the following script, storing in groupone/data/reference
 bash "scripts/00_get_reference.bash"
@@ -125,18 +162,18 @@ fi
 if [ ! -d "${PROJ_DIR}/results/multiqc/pretrim" ]; then
     # run multiqc if the directory not detected
     multiqc $PROJ_DIR/results/qc/ -o $PROJ_DIR/results/multiqc/pretrim --export
-    if [ ! -d "$PROJ_DIR/figures/pre_multiqc_plots" ]; then
-            mkdir $PROJ_DIR/figures/pre_multiqc_plots
-            cp $PROJ_DIR/results/multiqc/pretrim/multiqc_plots/png/* $PROJ_DIR/figures/pre_multiqc_plots
-            echo "Copying PNG of multi-qc plots to $PROJ_DIR/figures/pre_multiqc_plots"
+    if [ ! -d "$OUTPUT_DIR/pre_multiqc_plots" ]; then
+            mkdir $OUTPUT_DIR/pre_multiqc_plots
+            cp $PROJ_DIR/results/multiqc/pretrim/multiqc_plots/png/* $OUTPUT_DIR/pre_multiqc_plots
+            echo "Copying PNG of multi-qc plots to $OUTPUT_DIR/pre_multiqc_plots"
     fi
 else
     echo "Multi-QC reports for FastQC can be found in ${PROJ_DIR}/results/multiqc/pretrim"
-    echo "PNG files for multi-qc plots are accessible from $PROJ_DIR/figures/pre_multiqc_plots"
+    echo "PNG files for multi-qc plots are accessible from $OUTPUT_DIR/pre_multiqc_plots"
 fi
 
 # generate a Multi-QC dataframe using Pandas showing total sequences and percent duplicates for each SRR pair read
-python3 scripts/01_get_fastqc_table.py
+python3 scripts/01_get_fastqc_table.py $OUTPUT_DIR
 
 ############## Step 2.2 : FASTP trimming ##############
 # Fastp logic, similar logic as above
@@ -190,20 +227,20 @@ done < $SRA_LIST
 if [ ! -d "$PROJ_DIR/results/multiqc/posttrim" ]; then
 
     multiqc $PROJ_DIR/results/trimmed/ -o $PROJ_DIR/results/multiqc/posttrim --export
-    if [ ! -d "$PROJ_DIR/figures/post_multiqc_plots" ]; then
+    if [ ! -d "$OUTPUT_DIR/post_multiqc_plots" ]; then
         # save all exported pngs to post_multiqc_plots
-        mkdir $PROJ_DIR/figures/post_multiqc_plots
-        cp $PROJ_DIR/results/multiqc/posttrim/multiqc_plots/png/* $PROJ_DIR/figures/post_multiqc_plots
-        echo "Copying PNG of multi-qc plots to $PROJ_DIR/figures/post_multiqc_plots"
+        mkdir $OUTPUT_DIR/post_multiqc_plots
+        cp $PROJ_DIR/results/multiqc/posttrim/multiqc_plots/png/* $OUTPUT_DIR/post_multiqc_plots
+        echo "Copying PNG of multi-qc plots to $OUTPUT_DIR/post_multiqc_plots"
     fi
 
 else
     echo "Multi-QC reports for FastP can be found in ${PROJ_DIR}/results/multiqc/posttrim"
-    echo "PNG files for multi-qc plots are accessible from $PROJ_DIR/figures/post_multiqc_plots"
+    echo "PNG files for multi-qc plots are accessible from $PROJ_DIR/$OUTPUT_DIR/post_multiqc_plots"
 fi
 # open the html link to the html 
 # generate a report using get_multiqc_graphs
-python3 scripts/02_get_multiqc_graphs.py $SRA_LIST
+python3 scripts/02_get_multiqc_graphs.py $SRA_LIST $OUTPUT_DIR
 ############### Step 3: Alignment and Quantification with Salmon ##############
 # Regardless of computational prowess, will default to running one alignment at a time
 
@@ -241,14 +278,14 @@ done < $WORKFLOW_LIST
 # total and top 10 total as a tsv and txt file respectively for reporting
 # finally it makes a plot
 TOPGENES_SCRIPT="${PROJ_DIR}/scripts/04_get_topgenes.py"
-python3 ${TOPGENES_SCRIPT} ${SRA_LIST}
+python3 ${TOPGENES_SCRIPT} ${SRA_LIST} ${OUTPUT_DIR}
 # broke down the final statement below
 echo "All SRA genes have been quantified. Top Genes have been aggregated"
 echo "and tallied and stored in ${PROJ_DIR}/results as topgenes_aggregate.txt"
 # after iterating through this create a new file using the annotations/bsub_gff_cds.txt file
-> ${PROJ_DIR}/results/topgenes_aggregate_20_reference.txt
-awk 'NR>1 {print $1}' ${PROJ_DIR}/results/topgenes_aggregate_20.txt | while read line; do
-    grep "$line" ${PROJ_DIR}/data/annotations/bsub_gff_cds.txt >> ${PROJ_DIR}/topgenes_aggregate_20_reference.txt
+> ${OUTPUT_DIR}/topgenes_aggregate_20_reference.txt
+awk 'NR>1 {print $1}' ${OUTPUT_DIR}/topgenes_aggregate_20.txt | while read line; do
+    grep "$line" ${PROJ_DIR}/data/annotations/bsub_gff_cds.txt >> ${OUTPUT_DIR}/topgenes_aggregate_20_reference.txt
 done 
 
 rm $WORKFLOW_LIST
