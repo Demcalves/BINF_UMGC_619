@@ -161,6 +161,7 @@ fi
 # Aggregate FASTQC reports
 if [ ! -d "${PROJ_DIR}/results/multiqc/pretrim" ]; then
     # run multiqc if the directory not detected
+    mkdir "$PROJ_DIR/results/multiqc/pretrim"
     multiqc $PROJ_DIR/results/qc/ -o $PROJ_DIR/results/multiqc/pretrim --export
     if [ ! -d "$OUTPUT_DIR/pre_multiqc_plots" ]; then
             mkdir $OUTPUT_DIR/pre_multiqc_plots
@@ -225,7 +226,7 @@ done < $SRA_LIST
 
 # Aggregate all FastP reports from earlier using MultiQc
 if [ ! -d "$PROJ_DIR/results/multiqc/posttrim" ]; then
-
+    mkdir "$PROJ_DIR/results/multiqc/posttrim"
     multiqc $PROJ_DIR/results/trimmed/ -o $PROJ_DIR/results/multiqc/posttrim --export
     if [ ! -d "$OUTPUT_DIR/post_multiqc_plots" ]; then
         # save all exported pngs to post_multiqc_plots
