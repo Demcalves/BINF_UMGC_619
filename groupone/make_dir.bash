@@ -1,7 +1,0 @@
-set -eou pipefail
-path=$(pwd)
-echo "${path}"
-
-# set directory
-# Create a project directory from inside group one
-mkdir -p {data/{raw,reference,index, annotations},results/{qc,trimmed,aligned,counts,de,figures}}
