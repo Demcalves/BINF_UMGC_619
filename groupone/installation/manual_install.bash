@@ -65,7 +65,6 @@ python3 -c "import pandas, seaborn; print(pandas.__version__, seaborn.__version_
 # move the path of all of the tools installed manually without pip or debian
 cat >> ~/.bashrc << 'EOF'
 export PATH="/opt/sratoolkit-3.4.1/bin:$PATH"
-export PATH="/opt/salmon-2.3.4/bin:$PATH"
-export PATH="/opt/gffread-0.12.7:$PATH"
+export PATH="/opt/salmon-2.3.4:$PATH"
 EOF
 source ~/.bashrc
