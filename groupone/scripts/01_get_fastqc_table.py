@@ -7,8 +7,17 @@ output_dir = sys.argv[1]
 with open(f"{proj_dir}/results/multiqc/pretrim/multiqc_data/multiqc_data.json") as fastqc_f:
     fastqc_data = json.load(fastqc_f)
 
-# aliases a dictionary with key-value pairs (SRR_#.fastq) and a list of metrics from fastqc_data
-stats = fastqc_data['report_general_stats_data'][0] 
+stats_data = fastqc_data['report_general_stats_data']
+
+if isinstance(stats_data, list):
+    # old versions (<=1.2x): single-element list, just unwrap it
+    stats = stats_data[0]
+else:
+    # 1.3x+: dict keyed by module name
+    stats = stats_data.get('fastqc', stats_data)
+    # fallback: if 'fastqc' isn't the key, just grab the first value
+    if 'fastqc' not in stats_data:
+        stats = next(iter(stats_data.values()))
 
 comp_records, sum_records = [], []
 for sample, metrics in stats.items():
