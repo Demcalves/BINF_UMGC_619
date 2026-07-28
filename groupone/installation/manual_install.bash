@@ -42,11 +42,11 @@ fastp --version
 
 # installation block for Salmon
 sleep 5s
-echo "Preparing to install Salmon from COMBINE lab, version 1.10.0"
-sudo wget https://github.com/COMBINE-lab/salmon/releases/download/v1.10.0/salmon-1.10.0_linux_x86_64.tar.gz 
-sudo tar -xzf salmon-1.10.0_linux_x86_64.tar.gz # unzips to salmon-latest_linux_x86_64
-sudo mv salmon-latest_linux_x86_64 salmon-1.10.0
-export PATH="/opt/salmon-1.10.0/bin:$PATH"   # add to ~/.bashrc
+echo "Preparing to install Salmon from COMBINE lab, version 2.3.4"
+sudo wget https://github.com/COMBINE-lab/salmon/releases/download/v2.3.4/salmon-cli-x86_64-unknown-linux-gnu.tar.xz 
+sudo tar -xf salmon-cli-x86_64-unknown-linux-gnu.tar.xz # unzips to salmon-latest_linux_x86_64
+sudo mv salmon-latest_linux_x86_64 salmon-2.3.4
+export PATH="/opt/salmon-2.3.4:$PATH"   # add to ~/.bashrc
 salmon --version
 
 # installation block for gffread
@@ -65,7 +65,7 @@ python3 -c "import pandas, seaborn; print(pandas.__version__, seaborn.__version_
 # move the path of all of the tools installed manually without pip or debian
 cat >> ~/.bashrc << 'EOF'
 export PATH="/opt/sratoolkit-3.4.1/bin:$PATH"
-export PATH="/opt/salmon-1.10.0/bin:$PATH"
+export PATH="/opt/salmon-2.3.4/bin:$PATH"
 export PATH="/opt/gffread-0.12.7:$PATH"
 EOF
 source ~/.bashrc

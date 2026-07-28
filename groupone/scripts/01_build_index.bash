@@ -8,7 +8,6 @@ set -eou pipefail
 PROJ_DIR=$(pwd)
 REF_DIR="${PROJ_DIR}/data/reference"
 IDX_DIR="${PROJ_DIR}/data/index"
-RES_DIR=
 
 # make transcriptome file with gffread, stored in data/ref
 if [ ! -f "${REF_DIR}/bsubtilis_transcriptome.fa" ]; then
