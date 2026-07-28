@@ -114,7 +114,7 @@
 
 ## Alignment and Quantification
 - **Tools Used:**
-    - Salmon (version: 0.13.2)
+    - Salmon (version: 2.3.4)
     - gffread (version: 0.12.7)
 - **Tasks Performed:**
     - Downloaded Reference Genome for B. subtilis from the NCBI at https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_000009045.1/
